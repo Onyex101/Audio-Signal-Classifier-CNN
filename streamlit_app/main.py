@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+from streamlit_pills import pills
 from PIL import Image
 import numpy as np
 import librosa
@@ -36,11 +37,13 @@ with st.sidebar:
     st.image(icon_image)
     st.divider()
     uploaded_file = st.file_uploader("Choose File", type=["wav"],accept_multiple_files=False)
-    sample_file = st.checkbox('Select test file')
+    sample_file = st.checkbox('Load Sample file')
     
 
 st.image(header_image)
 st.title("Audio Sample Analysis")
+classes = ["air_conditioner","car_horn","children_playing","dog_bark","drilling", "engine_idling", "gun_shot", "jackhammer", "siren", "street_music"]
+pills("Available Classes", classes, index=None)
 if sample_file or uploaded_file is not None:
     audio_bytes = None
     if sample_file:
@@ -52,7 +55,6 @@ if sample_file or uploaded_file is not None:
         filename = f"streamlit_app/{save_file(uploaded_file)}"
     st.audio(audio_bytes)
     with st.spinner('Loading...'):
-        classes = ["air_conditioner","car_horn","children_playing","dog_bark","drilling", "engine_idling", "gun_shot", "jackhammer", "siren", "street_music"]
         original_audio, sample_rate = librosa.load(filename)
         mfccs_features = librosa.feature.mfcc(y=original_audio, sr=sample_rate, n_mfcc=45)
         melspec = librosa.feature.melspectrogram(y=original_audio,sr=sample_rate)
@@ -61,7 +63,13 @@ if sample_file or uploaded_file is not None:
         result_array = model.predict(mfccs_scaled_features)
         result = np.argmax(result_array[0])
         prediction = result_classes[result]
-        st.success(prediction)
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            st.success(f"Predicted Class: {prediction}", icon="✅")
+
+        with col_2:
+            pass
+        
         col1, col2 = st.columns(2)
         with col1:
             fig, ax = plt.subplots(nrows=1,figsize=(10, 4),sharex=True)
